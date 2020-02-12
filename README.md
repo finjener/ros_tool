@@ -241,7 +241,7 @@ The system includes robust error handling:
 No special installation is required. Simply clone the repository:
 
 ```bash
-git clone https://github.com/sf044/ros_tool.git
+git clone 
 cd ros_tool
 ```
 
