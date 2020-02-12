@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Terminal=true
+Name=app
+Icon=utilities-terminal
+Exec=gnome-terminal -e "bash -c '$(dirname %k)'/./app.sh;$SHELL"
+Categories=Application;
