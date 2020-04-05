@@ -1,13 +1,24 @@
 #!/bin/bash
 
-b[1]=buildroot-2021.02.8
-b[2]=2021
+b[1]=buildroot-2022.02
+b[2]=2022
 
 package_list=( "bc" "bison" "build-essential" "curl"
 "device-tree-compiler" "dosfstools" "flex" "gcc-aarch64-linux-gnu"
 "gcc-arm-linux-gnueabihf" "gdisk" "git" "gnupg" "gperf" "libc6-dev"
-"libncurses5-dev" "libpython-dev" "libssl-dev" "libssl1.0.0"
-"lzop" "mtools" "parted" "repo" "swig" "tar" "zip" "qtbase5-dev" "qt4-default" "mkbootimg" "libc6:i386" "qemu-user-static" "binfmt-support" )
+"libncurses5-dev" "libssl-dev"
+"lzop" "mtools" "parted" "swig" "tar" "zip" "qtbase5-dev" "qemu-user-static" "binfmt-support"
+"libglade2-dev" "libglib2.0-dev" "libgtk2.0-dev" "libpython2-dev")
+
+package_list_ubuntu20=("repo" "mkbootimg")
+package_list_ubuntu14=("qt4-default" "libc6:i386" "libssl1.0.0" "libpython-dev" "nautilus-open-terminal")
+
+CURRENT_PATH=$(pwd)
+UBUNTU_VERSION=$(lsb_release -rs)
+CONFIG_GUI=gconfig
+
+sudo adduser $USER vboxsf
+sudo adduser $USER dialout
 
 ros_tool() {
 
@@ -28,11 +39,11 @@ ros_tool() {
 	echo $'\n\n\n\n'
 	echo $'\n\n\n\n'
 
-	ans=$(zenity  --list  --text "Choose a buildroot option" --radiolist  --column "Pick" --column "version" TRUE "buildroot-2021.02.8"); 
+	ans=$(zenity  --list  --text "Choose a buildroot option" --radiolist  --column "Pick" --column "version" TRUE "buildroot-2022.02");
 	echo $ans
-	if [ $ans == "buildroot-2021.02.8" ]; then
-		b[1]=buildroot-2021.02.8
-		b[2]=2021
+	if [ $ans == "buildroot-2022.02" ]; then
+		b[1]=buildroot-2022.02
+		b[2]=2022
 	else
 	zenity --error --text "Unknown compiler "
 	fi
@@ -125,12 +136,10 @@ ros_tool() {
 
 compile_kernel() {
 
-	CURRENT_PATH=$(pwd)
-	UBUNTU_VERSION=$(lsb_release -rs)
-	CONFIG_GUI=gconfig
-
 	if [ $UBUNTU_VERSION == "16.04" ] || [ $UBUNTU_VERSION == "14.04" ]; then
 		CONFIG_GUI="xconfig"
+	elif [ $UBUNTU_VERSION == "20.04" ]; then
+		CONFIG_GUI="gconfig"
 	else
 		CONFIG_GUI="gconfig"
 	fi
@@ -355,27 +364,45 @@ install_package() {
 }
 
 install_func1() {
-	for i in ${package_list[@]}
-	do
-		echo $i
-		install_package $i
-	done
+    for i in ${package_list[@]}
+    do
+        echo $i
+        install_package $i
+    done
+
+	if [ $UBUNTU_VERSION == "16.04" ] || [ $UBUNTU_VERSION == "14.04" ]; then
+		for i in ${package_list_ubuntu14[@]}
+		do
+			echo $i
+			install_package $i
+			if which mkbootimg >/dev/null; then
+                echo exists
+            else
+                echo does not exist
+                cd rockchip-tools
+                git clone https://github.com/neo-technologies/rockchip-mkbootimg.git
+                cd rockchip-mkbootimg
+                make
+                sudo make install
+                cd ..
+                cd ..
+            fi
+		done
+	elif [ $UBUNTU_VERSION == "20.04" ] || [ $UBUNTU_VERSION == "21.10" ]; then
+
+		for i in ${package_list_ubuntu20[@]}
+		do
+			echo $i
+			install_package $i
+		done
+	else
+		echo "---"
+	fi
 	
 	# if [ $(dpkg-query -W -f='${Status}' mkbootimg 2>/dev/null | grep -c "ok installed") -eq 0 ];
 	
-	if which mkbootimg >/dev/null; then
-                echo exists
-        else
-                echo does not exist
-                cd rockchip-tools
-		git clone https://github.com/neo-technologies/rockchip-mkbootimg.git
-		cd rockchip-mkbootimg
-		make
-		sudo make install
-		cd ..
-		cd ..
-        fi
 }
 
 yes | install_func1
 ros_tool $1 $2 $3 $4
+
