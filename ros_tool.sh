@@ -1,7 +1,7 @@
 #!/bin/bash
 
-b[1]=buildroot-2022.02
-b[2]=2022
+b[1]=buildroot-2021.02.8
+b[2]=2021
 
 package_list=( "bc" "bison" "build-essential" "curl"
 "device-tree-compiler" "dosfstools" "flex" "gcc-aarch64-linux-gnu"
@@ -39,15 +39,12 @@ ros_tool() {
 	echo $'\n\n\n\n'
 	echo $'\n\n\n\n'
 
-	ans=$(zenity  --list  --text "Choose a buildroot option" --radiolist  --column "Pick" --column "version" TRUE "buildroot-2022.02");
+	ans=$(zenity  --list  --text "Choose a buildroot option" --radiolist  --column "Pick" --column "version" TRUE ${b[1]});
 	echo $ans
-	if [ $ans == "buildroot-2022.02" ]; then
-		b[1]=buildroot-2022.02
-		b[2]=2022
-	else
-	zenity --error --text "Unknown compiler "
+	if [ $ans == ${b[1]} ]; then
+		b[1]=${b[1]}
+		b[2]=${b[2]}
 	fi
-
 	echo $'\n\n\n\n'
 
 	if [ "$MAKE_BUILDROOT" == "radxa" ] || [ "$MAKE_BUILDROOT" == "rasp3" ]; then
@@ -89,11 +86,11 @@ ros_tool() {
 						make --directory=./${b[1]}/ xconfig
 						make --directory=./${b[1]}/
 						;;
-					[1]* ) 
+						[1]* )
 						echo $'\n\n'; echo 'continue--------'; echo $'\n\n'
 						break
 						;;
-					* ) echo $'\n\n'; echo "Please answer yes or no."; echo $'\n\n'
+						* ) echo $'\n\n'; echo "Please answer yes or no."; echo $'\n\n'
 						;;
 				esac
 			done
@@ -388,7 +385,7 @@ install_func1() {
                 cd ..
             fi
 		done
-	elif [ $UBUNTU_VERSION == "20.04" ] || [ $UBUNTU_VERSION == "21.10" ]; then
+	elif [ $UBUNTU_VERSION == "20.04" ] || [ $UBUNTU_VERSION == "22.04" ]; then
 
 		for i in ${package_list_ubuntu20[@]}
 		do
@@ -403,6 +400,9 @@ install_func1() {
 	
 }
 
+if [ $UBUNTU_VERSION == "14.04" ]; then
+	install_func1
+fi
 yes | install_func1
 ros_tool $1 $2 $3 $4
 
