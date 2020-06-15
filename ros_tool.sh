@@ -143,6 +143,7 @@ compile_kernel() {
 
 	ans=$(zenity  --list  --text "Choose a cross compiler" --radiolist  --column "Pick" --column "Compiler" TRUE "arm-eabi-4.6" FALSE "default" FALSE "gcc-4.8" FALSE "gcc-4.9" ); 
 	echo $ans
+	
 	if [ $ans == "default" ]; then
 		COMPILER_PATH=arm-linux-gnueabihf-
 		
@@ -176,13 +177,15 @@ compile_kernel() {
 		COMPILER_PATH=$CURRENT_PATH/arm-eabi-4.6/bin/arm-eabi-
 
 	else
-	zenity --error --text "Unknown compiler "
+		zenity --error --text "Unknown compiler "
 	fi
 
 	if [ ! -d sys ]; then
 		mkdir sys
 	fi
+	
 	cd sys
+	
 	if [ ! -d linux-radxa-stable-3.0 ]; then
 		git clone -b radxa-stable-3.0 https://www.github.com/ferhatsencer/linux-rockchip.git
 		mv linux-rockchip linux-radxa-stable-3.0
@@ -200,6 +203,7 @@ compile_kernel() {
 	fi
 
 	cd ..
+	
 	if [ ! -f config_copied ]; then
 		rm sys/linux-radxa-stable-3.0/.config
 		cp conf/rockchip-default_defconfig sys/linux-radxa-stable-3.0/.config
@@ -236,22 +240,22 @@ compile_kernel() {
 					COMPILER_PATH=$CURRENT_PATH/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/bin/arm-linux-gnueabihf-
 
 				elif [ $ans == "arm-eabi-4.6" ]; then
-                                if [ ! -d arm-eabi-4.6 ]; then
-                                        git clone -b kitkat-release --depth 1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-eabi-4.6
-                                fi
-                                        COMPILER_PATH=$CURRENT_PATH/arm-eabi-4.6/bin/arm-eabi-
-                                else
-				zenity --error --text "Unknown compiler "
+					if [ ! -d arm-eabi-4.6 ]; then
+						git clone -b kitkat-release --depth 1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-eabi-4.6
+					fi
+					COMPILER_PATH=$CURRENT_PATH/arm-eabi-4.6/bin/arm-eabi-
+				else
+					zenity --error --text "Unknown compiler "
 				fi
 				
 				make clean
 				make $CONFIG_GUI
 				make -j2 ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- kernel.img
-				;;
+			;;
 			[1]* ) echo $'\n\n'; echo 'continue--------'; echo $'\n\n'; break
-				;;
+			;;
 			* ) echo $'\n\n'; echo "Please answer yes or no."; echo $'\n\n'
-				;;
+			;;
 		esac
 	done
 
@@ -269,7 +273,6 @@ compile_kernel() {
 	fi
 
 	mkbootimg --kernel sys/linux-radxa-stable-3.0/arch/arm/boot/Image --ramdisk sys/initrd.img -o rockchip-tools/Linux/boot-linux.img
-
 	cp sys/linux-radxa-stable-3.0/.config last_config_backup
 
 }
@@ -372,18 +375,18 @@ install_func1() {
 		do
 			echo $i
 			install_package $i
-			if which mkbootimg >/dev/null; then
-                echo exists
-            else
-                echo does not exist
-                cd rockchip-tools
-                git clone https://github.com/neo-technologies/rockchip-mkbootimg.git
-                cd rockchip-mkbootimg
-                make
-                sudo make install
-                cd ..
-                cd ..
-            fi
+		if which mkbootimg >/dev/null; then
+                	echo exists
+           	else
+			echo does not exist
+			cd rockchip-tools
+			git clone https://github.com/neo-technologies/rockchip-mkbootimg.git
+			cd rockchip-mkbootimg
+			make
+			sudo make install
+			cd ..
+			cd ..
+            	fi
 		done
 	elif [ $UBUNTU_VERSION == "20.04" ] || [ $UBUNTU_VERSION == "22.04" ]; then
 
@@ -396,13 +399,15 @@ install_func1() {
 		echo "---"
 	fi
 	
-	# if [ $(dpkg-query -W -f='${Status}' mkbootimg 2>/dev/null | grep -c "ok installed") -eq 0 ];
+	#if [ $(dpkg-query -W -f='${Status}' mkbootimg 2>/dev/null | grep -c "ok installed") -eq 0 ];
 	
 }
 
 if [ $UBUNTU_VERSION == "14.04" ]; then
 	install_func1
+else
+	yes | install_func1
 fi
-yes | install_func1
+
 ros_tool $1 $2 $3 $4
 
